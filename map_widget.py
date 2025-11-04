@@ -1,25 +1,8 @@
-from shiny import render
-from shiny.express import input, ui, app
+
 import osmnx as ox
 import networkx as nx
-import netCDF4 as nc
-import numpy as np
-import matplotlib.pyplot as plt
-from shapely import MultiPolygon, Polygon
-from shapely.ops import unary_union
-import geopandas as gpd
-from shapely.geometry import Point
-from descartes import PolygonPatch
 import matplotlib.colors as mcolors
-from shiny import reactive
-from dotenv import load_dotenv
-import os
-from ipyleaflet import Map, Marker, Polyline, CircleMarker, Popup
-from shinywidgets import render_widget  
-from io import BytesIO
-import base64
-from ipyleaflet import ImageOverlay
-from matplotlib import cm
+from ipyleaflet import Polyline, Popup
 import ipywidgets as widgets
 
 
@@ -44,7 +27,7 @@ def calculate_and_display_route(G, orig_node, dest_node, m, weather_metrics, fas
             'heat': mcolors.LinearSegmentedColormap.from_list('heat', ['#ffff00', '#ff8c00', '#ff0000']),  
             'wind': mcolors.LinearSegmentedColormap.from_list('wind', ['#90ee90', '#228b22', '#006400']),  
             'humidity': mcolors.LinearSegmentedColormap.from_list('humidity', ['#ffa500', '#ff4500', '#8b0000']),  
-            'fastest': mcolors.LinearSegmentedColormap.from_list('fastest', ["#ffffff", '#888888', '#000000'])  
+            'fastest': mcolors.LinearSegmentedColormap.from_list('fastest', ["#000000", '#000000', '#000000'])  
         }
         
         if k_routes > 3:
@@ -239,8 +222,8 @@ def calculate_and_display_route(G, orig_node, dest_node, m, weather_metrics, fas
                 )
                 
                 # Make fastest route thinner and slightly transparent
-                weight_val = 4 if is_fastest else 6
-                opacity_val = 0.7 if is_fastest else 0.9
+                weight_val = 4 if is_fastest else 7
+                opacity_val = 0.3 if is_fastest else 0.7
                 
                 route_segment = Polyline(
                     locations=segment_coords,

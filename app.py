@@ -1,26 +1,19 @@
 from shiny import render
-from shiny.express import input, ui, app
+from shiny.express import input, ui
 import osmnx as ox
 import networkx as nx
-import netCDF4 as nc
 import numpy as np
 import matplotlib.pyplot as plt
-from shapely import MultiPolygon, Polygon
-from shapely.ops import unary_union
-import geopandas as gpd
-from shapely.geometry import Point
-from descartes import PolygonPatch
 import matplotlib.colors as mcolors
 from shiny import reactive
 from dotenv import load_dotenv
 import os
-from ipyleaflet import Map, Marker, Polyline, CircleMarker, Popup
+from ipyleaflet import Map, CircleMarker
 from shinywidgets import render_widget  
 from io import BytesIO
 import base64
 from ipyleaflet import ImageOverlay
-from matplotlib import cm
-import ipywidgets as widgets
+
 
 from load_static import DataLoader
 from calculate_isochrones import calculate_isochrones
@@ -33,16 +26,16 @@ load_dotenv()
 
 
 # Base directory from which to load weather data
-
-BASE_DATA_DIR = os.getenv("BASE_DATA_DIR", r"\20250706\t00z\output")
-
+BASE_DATA_DIR = os.getenv("BASE_DATA_DIR") # Sample dataset included in repo
+if BASE_DATA_DIR is None:
+    BASE_DATA_DIR = r"${YOUR_PATH_TO_THIS_FOLDER_HERE}\20250706\t00z\output"
 
 # Construct data carrying object
 data_loader = DataLoader()
 
 # Define paths to weather data files
 
-data_loader.load_graph(graph_path=r"\chicago.graphml")
+data_loader.load_graph(graph_path=r"chicago.graphml")
 
 
 G = data_loader.G
@@ -50,7 +43,7 @@ rain_data = data_loader.rain_data
 
 TOTAL_WEIGHTS = 0.0
 # --- UI ---
-ui.page_opts(title="OSM Route Viewer", fillable=True)
+ui.page_opts(title="Route viewer", fillable=True)
 
 
 with ui.layout_sidebar():
@@ -58,13 +51,6 @@ with ui.layout_sidebar():
     with ui.sidebar():
         ui.input_text("origin", "Enter Origin (lat, lon)", "41.9814866, -87.8593659")
         ui.input_text("destination", "Enter Destination (lat, lon)", "41.7905674, -87.5831307")
-        
-        # @render.text
-        # def txt():
-        #     return f"Origin: {input.origin()}, Destination: {input.destination()}"
-        
-        # ui.input_checkbox("show_rain", "Show Rain Overlay", True)
-        # ui.input_slider("rain_alpha", "Rain Transparency", 0.1, 1.0, 0.4)
         
         ui.input_radio_buttons(
             "graph_show",
@@ -117,7 +103,6 @@ with ui.layout_sidebar():
             if selected_weights:  
                 sliders = []
                 
-                # Rain weight slider - only show if rain is selected
                 if "rain" in selected_weights:
                     sliders.append(
                         ui.input_slider(
@@ -172,7 +157,6 @@ with ui.layout_sidebar():
             if len(selected_weights) < 2:
                 return ""
             
-            # Calculate current sum
             total = 0
             if "rain" in selected_weights:
                 total += input.rain_weight()
@@ -184,7 +168,7 @@ with ui.layout_sidebar():
                 total += input.humidity_weight()
             
             TOTAL_WEIGHTS = total
-            # Color code the display
+
             if total > 1.0:
                 status = "Sum exceeds 1, please set the sum of weights to 1.0"
             else:
@@ -201,7 +185,6 @@ with ui.layout_sidebar():
             if len(selected_weights) < 2:
                 return
             
-            # Get current values
             weights = {}
             if "rain" in selected_weights:
                 weights['rain'] = input.rain_weight()
@@ -212,7 +195,6 @@ with ui.layout_sidebar():
             if "humidity" in selected_weights:
                 weights['humidity'] = input.humidity_weight()
             
-            # Calculate sum
             total = sum(weights.values())
             
             if total == 0:
@@ -273,10 +255,10 @@ with ui.layout_sidebar():
     @reactive.event(input.generate_plot)
     def map_widget():
         
-        if input.generate_plot() == 0:
-            # Return an empty div or placeholder instead of None
-            from ipywidgets import HTML
-            return HTML("<div style='padding: 20px; text-align: center;'>Click 'Generate Plot' to load map</div>")
+        # if input.generate_plot() == 0:
+        #     # Return an empty div or placeholder instead of None
+        #     from ipywidgets import HTML
+        #     return HTML("<div style='padding: 20px; text-align: center;'>Click 'Generate Plot' to load map</div>")
         
         
         orig_str = input.origin()
@@ -284,8 +266,7 @@ with ui.layout_sidebar():
         weight_calc_method = input.weight_calculation_method()
         weight_types = input.weight_type()
         graph_show_mode = input.graph_show()
-        
-        # Get slider values
+
         rain_w = input.rain_weight() if "rain" in weight_types else None
         heat_w = input.heat_weight() if "heat" in weight_types else None
         wind_w = input.wind_weight() if "wind" in weight_types else None
@@ -315,7 +296,7 @@ with ui.layout_sidebar():
             )
 
             route = nx.shortest_path(G, orig_node, dest_node, weight="travel_time")
-            trip_times_seconds = calculate_isochrones(G, orig_node, dest_node, route)
+            trip_times_seconds = calculate_isochrones(G, orig_node, route)
 
             if input.weight_calculation_method() == "Classic":
                 classic_weight_calculations(
@@ -358,15 +339,9 @@ with ui.layout_sidebar():
                     trip_time_seconds=trip_times_seconds,
                     **optional_weights # **kwargs
                 )
-
-            
-
             
             m = Map(center=(41.869782371584364, -87.64851844339898), zoom=11)
-                
-            
-            
-            
+                 
             if rain_data is not None:
                 # Create a normalized rain overlay image
                 fig_overlay, ax_overlay = plt.subplots(figsize=(10, 10))
@@ -376,7 +351,7 @@ with ui.layout_sidebar():
                 norm = mcolors.Normalize(vmin=np.nanmin(rain_data), vmax=10)  # an arbitrary number to better showcase rain intensity 
                 cmap = plt.cm.Blues
                 cmap._init()
-                cmap._lut[:, -1] = 0.4  # Set alpha to 0.4 for transparency
+                cmap._lut[:, -1] = 0.4 # Alpha channel
                 
                 img = ax_overlay.imshow(rain_data, cmap=cmap, norm=norm, 
                                        extent=[lons.min(), lons.max(), lats.min(), lats.max()],
@@ -400,8 +375,7 @@ with ui.layout_sidebar():
                     opacity=0.9
                 )
                 m.add_layer(rain_overlay)
-            
-            # Add origin and destination markers
+
             origin_marker = CircleMarker(
                 location=(orig_lat, orig_lon),
                 radius=8,

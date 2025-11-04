@@ -1,10 +1,10 @@
-import osmnx as ox
+
 import networkx as nx
-import pandas as pd
 
 
-# I need the dest so I can stop calculating if the dest is inside the current isochrome
-def calculate_isochrones(G, orig, dest, route):
+
+
+def calculate_isochrones(G, orig, route):
     
     for u, v, k, data in G.edges(data=True, keys=True):
         
@@ -33,12 +33,10 @@ def calculate_isochrones(G, orig, dest, route):
                 data['speed_kph'] = float(speed_value) * 1.60934
 
 
-        data['time'] = data['length'] / (data['speed_kph'] * 1000 / 3600) #in seconds
+        data['time'] = data['length'] / (data['speed_kph'] * 1000 / 3600)
 
     travel_times = get_estimated_ETA(G, route)
-    trip_times_seconds = [t * 60 for t in travel_times]  # ensure seconds
-    zone_edges = []
-    calculated_zones = []
+    trip_times_seconds = [t * 60 for t in travel_times]
     for zone_num, trip_time in enumerate(sorted(trip_times_seconds), start=1):
         subgraph = nx.ego_graph(G, orig, radius=trip_time, distance='time')
         for u, v, k in subgraph.edges(keys=True):

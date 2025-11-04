@@ -2,17 +2,19 @@ import numpy as np
 import networkx as nx
 import torch
 from torch_geometric.nn import SAGEConv
-from torch_geometric.loader import DataLoader
+
 import torch.nn.functional as F
 import os
 import geopandas as gpd
 import xarray as xr
-from shapely.geometry import Point, Polygon
+from shapely.geometry import Point
 from shapely.ops import unary_union
-import rioxarray
+
 from scipy.spatial import cKDTree
 import numpy as np
-from sklearn.preprocessing import MinMaxScaler
+
+from torch_geometric.data import Data
+    
 
 
 class NodeRegressor(torch.nn.Module):
@@ -197,7 +199,7 @@ def GNN_weight_calculations(G,
     edge_index = edge_index.to(device)
 
 
-    if os.path.exists("rain_model.pth"):
+    if os.path.exists("rain_model.pth"): # Pre trained model included in repo
         model = NodeRegressor(x.shape[1], hidden_channels=64).to(device)
         checkpoint = torch.load("rain_model.pth", map_location=device)
         model.load_state_dict(checkpoint['model_state_dict'])
@@ -260,7 +262,7 @@ def GNN_weight_calculations(G,
     heat_w = abs((heat_pred_at_v * heat_weight) + (travel_lengths * (1 - heat_weight)))
     humidity_w = abs((humidity_pred_at_v * humidity_weight) + (travel_lengths * (1 - humidity_weight)))
     wind_w = abs((wind_speed_pred_at_v * wind_weight) + (travel_lengths * (1 - wind_weight)))
-    wind_dir_w = abs((wind_dir_pred_at_v * wind_weight) + (travel_lengths * (1 - wind_weight)))
+    wind_dir_w = (wind_dir_pred_at_v * wind_weight) + (travel_lengths * (1 - wind_weight))
 
     weather_combination = (
         (rain_weight * rain_pred_at_v) +
@@ -298,9 +300,7 @@ def get_element_at_point(lat, lon, rain_grid, lats, lons):
 
 def train_GNN_model(G, rain_grid, heat_grid, wind_speed_grid, wind_dir_grid, humidity_grid, coords, node_ids, lons, lats, hidden_dim=64, lr=1e-3, epochs=300, out_channels=5):
     
-    from torch_geometric.data import Data
     
-    # Build the k-d tree from the grid coordinates once
     grid_kdtree = build_grid_kdtree(lats, lons)
 
     rain_nodes = get_values_at_points_kdtree(rain_grid, grid_kdtree, coords)
@@ -402,7 +402,7 @@ def prepare_node_features_and_edges(G, rain_grid, heat_grid, wind_speed_grid, wi
     
     node_ids = list(G.nodes)
 
-    # Use the fast k-d tree lookup for each weather variable
+
     if rain_grid is not None: 
         rain_nodes = get_values_at_points_kdtree(rain_grid, grid_kdtree, coords)
         rain_nodes = np.nan_to_num(rain_nodes, nan=np.nanmedian(rain_nodes))
@@ -520,11 +520,3 @@ def create_zone_polygons(G):
         elif len(unique_pts) == 1:
             zone_polygons[zone] = unique_pts[0].buffer(0.001)
     return zone_polygons
-
-
-def min_max_normalize(data):
-    """Min-max normalize a numpy array to the range [0, 1].
-    Expects a 2D numpy array.
-    """
-    scaler = MinMaxScaler()
-    return scaler.fit_transform(data)

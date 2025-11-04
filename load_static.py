@@ -1,14 +1,6 @@
 import osmnx as ox
-import networkx as nx
 import netCDF4 as nc
 import numpy as np
-import matplotlib.pyplot as plt
-from shapely import MultiPolygon, Polygon
-from shapely.ops import unary_union
-import geopandas as gpd
-from shapely.geometry import Point
-from descartes import PolygonPatch
-import matplotlib.colors as mcolors
 import os
 
 
