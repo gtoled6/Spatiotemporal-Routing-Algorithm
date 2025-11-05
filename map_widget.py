@@ -50,7 +50,8 @@ def calculate_and_display_route(G, orig_node, dest_node, m, weather_metrics, fas
                     routes_data.append({
                         'route': route,
                         'weight_type': weight,
-                        'is_fastest': False
+                        'is_fastest': False,
+                        'route_index': i
                     })
                     
             except Exception as e:
@@ -103,6 +104,7 @@ def calculate_and_display_route(G, orig_node, dest_node, m, weather_metrics, fas
             route = route_info['route']
             weight_type = route_info['weight_type']
             is_fastest = route_info['is_fastest']
+            route_index = route_info.get('route_index', 0)
             
             
             rain_values = []
@@ -168,7 +170,11 @@ def calculate_and_display_route(G, orig_node, dest_node, m, weather_metrics, fas
                     edge_info = edge_data
                 
                 # Create popup
-                route_label = "Fastest Route" if is_fastest else f"{weight_type.capitalize()}-Optimized Route"
+                if is_fastest:
+                    route_label = "Fastest Route"
+                else:
+                    alt_label = f" (Alternative {route_index + 1})" if route_index > 0 else ""
+                    route_label = f"{weight_type.capitalize()}-Optimized Route{alt_label}"
                 
                 popup_html = f"""
                 <div style='min-width: 250px;'>

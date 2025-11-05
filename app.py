@@ -251,14 +251,30 @@ with ui.layout_sidebar():
     else:
         ui.input_action_button(id="generate_plot", label="Generate Plot", disabled=True)
 
+ 
+    # There is a wired bug where the map dosent unload propperly on re-generation
+    # this way we force it to unload and reload
+ 
+    map_instance = reactive.value(None)
+    
+    @reactive.effect
+    @reactive.event(input.generate_plot)
+    def create_new_map():
+        """Destroy old map and trigger creation of new one"""
+        
+        map_instance.set(None)
+        
+        map_instance.set("recreate")
+
+
     @render_widget
     @reactive.event(input.generate_plot)
     def map_widget():
         
-        # if input.generate_plot() == 0:
-        #     # Return an empty div or placeholder instead of None
-        #     from ipywidgets import HTML
-        #     return HTML("<div style='padding: 20px; text-align: center;'>Click 'Generate Plot' to load map</div>")
+        _ = map_instance()
+        if input.generate_plot() == 0:
+            from ipywidgets import HTML
+            return HTML("<div style='padding: 20px; text-align: center;'>Click 'Generate Plot' to load map</div>")
         
         
         orig_str = input.origin()
