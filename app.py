@@ -256,15 +256,33 @@ with ui.layout_sidebar():
     # this way we force it to unload and reload
  
     map_instance = reactive.value(None)
+    is_loading = reactive.value(False)
     
     @reactive.effect
     @reactive.event(input.generate_plot)
     def create_new_map():
         """Destroy old map and trigger creation of new one"""
-        
+        # Set loading state
+        is_loading.set(True)
         map_instance.set(None)
-        
         map_instance.set("recreate")
+
+    # @render.ui
+    # def loading_spinner():
+    #     """Display loading spinner while map is being generated"""
+    #     if is_loading():
+    #         return ui.div(
+    #             ui.HTML("""
+    #                 <div style='display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 50px;'>
+    #                     <img src='https://upload.wikimedia.org/wikipedia/commons/b/b1/Loading_icon.gif' 
+    #                          alt='Loading...' 
+    #                          style='width: 64px; height: 64px;'/>
+    #                     <p style='margin-top: 20px; font-size: 16px; color: #666;'>Generating route map...</p>
+    #                 </div>
+    #             """),
+    #             style="text-align: center;"
+    #         )
+    #     return ui.div()
 
 
     @render_widget
@@ -357,40 +375,42 @@ with ui.layout_sidebar():
                 )
             
             m = Map(center=(41.869782371584364, -87.64851844339898), zoom=11)
+              
+            # Add rain overlay representing ONLY starting time, NOT the stitched dataset  
                  
-            if rain_data is not None:
-                # Create a normalized rain overlay image
-                fig_overlay, ax_overlay = plt.subplots(figsize=(10, 10))
-                ax_overlay.axis('off')
+            # if rain_data is not None:
+            #     # Create a normalized rain overlay image
+            #     fig_overlay, ax_overlay = plt.subplots(figsize=(10, 10))
+            #     ax_overlay.axis('off')
                 
-                # Plot rain data with transparency
-                norm = mcolors.Normalize(vmin=np.nanmin(rain_data), vmax=10)  # an arbitrary number to better showcase rain intensity 
-                cmap = plt.cm.Blues
-                cmap._init()
-                cmap._lut[:, -1] = 0.4 # Alpha channel
+            #     # Plot rain data with transparency
+            #     norm = mcolors.Normalize(vmin=np.nanmin(rain_data), vmax=10)  # an arbitrary number to better showcase rain intensity 
+            #     cmap = plt.cm.Blues
+            #     cmap._init()
+            #     cmap._lut[:, -1] = 0.4 # Alpha channel
                 
-                img = ax_overlay.imshow(rain_data, cmap=cmap, norm=norm, 
-                                       extent=[lons.min(), lons.max(), lats.min(), lats.max()],
-                                       origin='lower', interpolation='bilinear')
+            #     img = ax_overlay.imshow(rain_data, cmap=cmap, norm=norm, 
+            #                            extent=[lons.min(), lons.max(), lats.min(), lats.max()],
+            #                            origin='lower', interpolation='bilinear')
                 
-                # Save to bytes
-                buf = BytesIO()
-                fig_overlay.savefig(buf, format='png', bbox_inches='tight', 
-                                   pad_inches=0, transparent=True, dpi=150)
-                plt.close(fig_overlay)
-                buf.seek(0)
+            #     # Save to bytes
+            #     buf = BytesIO()
+            #     fig_overlay.savefig(buf, format='png', bbox_inches='tight', 
+            #                        pad_inches=0, transparent=True, dpi=150)
+            #     plt.close(fig_overlay)
+            #     buf.seek(0)
                 
-                # Encode to base64
-                img_b64 = base64.b64encode(buf.read()).decode()
-                img_url = f"data:image/png;base64,{img_b64}"
+            #     # Encode to base64
+            #     img_b64 = base64.b64encode(buf.read()).decode()
+            #     img_url = f"data:image/png;base64,{img_b64}"
                 
-                # Add as ImageOverlay
-                rain_overlay = ImageOverlay(
-                    url=img_url,
-                    bounds=[[lats.min(), lons.min()], [lats.max(), lons.max()]],
-                    opacity=0.9
-                )
-                m.add_layer(rain_overlay)
+            #     # Add as ImageOverlay
+            #     rain_overlay = ImageOverlay(
+            #         url=img_url,
+            #         bounds=[[lats.min(), lons.min()], [lats.max(), lons.max()]],
+            #         opacity=0.9
+            #     )
+            #     m.add_layer(rain_overlay)
 
             origin_marker = CircleMarker(
                 location=(orig_lat, orig_lon),
@@ -431,12 +451,13 @@ with ui.layout_sidebar():
                     print(f"Route error: {e}")
                     import traceback
                     traceback.print_exc()
-            
+            is_loading.set(False)
             m
             return m
 
             
         except Exception as e:
+            is_loading.set(False)
             print(f"Map widget error: {e}")
             from ipywidgets import HTML
             return HTML(f"<div style='padding: 20px; color: red;'>Error: {e}</div>")
