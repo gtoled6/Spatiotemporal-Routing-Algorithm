@@ -53,3 +53,4 @@ out/
 
 /__pycache__/
 /rsconnect-python/
+/venv/
