@@ -1,30 +1,54 @@
-"# Spatiotemporal-Routing-Algorithm-with-Changing-Conditions" 
+# Spatiotemporal Routing Algorithm — Shiny App
 
-## Instalation guide
-### 1. To run this program you have to install the required packages with 
-` pip install -r requirements.txt `
+A web app that computes routes optimized for changing weather conditions (rain, heat, wind, humidity) using OSMnx/NetworkX and visualizes them with ipyleaflet. Built with Shiny for Python.
 
-### 2. Create a .env file which will contain the path to the folder in which you downloaded the folder
+---
 
-It should look something like this
+## Quick start
 
-` BASE_DATA_DIR = ${YOUR_PATH_TO_THIS_FOLDER_HERE}\20250706\t00z\output `
+1. Install dependencies:
+```bash
+pip install -r requirements.txt
+```
 
-For example:
+2. Configure data path:
 
-` BASE_DATA_DIR=C:\Users\USER\Desktop\Spatiotemporal-Routing-Algorithm\20250706\t00z\outputs `
+Create a `.env` file in the project root with the absolute path to the sample data folder:
 
-This is used to indicate where the sample dataset is located
+Windows example:
+```
+BASE_DATA_DIR=C:\Users\YourUser\Desktop\Spatiotemporal-Routing-Algorithm\20250706\t00z\output
+```
 
-### 3.1 If that dosent work, change line 31 of app.py and replace it with the same path as in your .env
+Linux example:
+```
+BASE_DATA_DIR=/home/youruser/Desktop/Spatiotemporal-Routing-Algorithm/20250706/t00z/output
+```
 
+If the `.env` approach fails, you can hardcode the path in `app.py`:
+```py
+BASE_DATA_DIR = r"C:\full\path\to\20250706\t00z\output"
+```
 
-### 4 Then open a terminal in the same folder as the downloaded project and execute this command:
+Required NetCDF files inside that `output` folder:
+- RAIN.nc
+- T2.nc
+- WSPD10.nc
+- WDIR10.nc
+- RH2.nc
 
-` shiny run --launch-browser app.py `
+3. Run the app:
+```bash
+shiny run --launch-browser app.py
+```
+Default address: `http://localhost:8000`
 
-This will open the app on the address ` http:localhost:8000 ` and will automatically open your browser
+To change port:
+```bash
+shiny run --launch-browser --port 3000 app.py
+```
 
-## Prerequisites
+## Notes & prerequisites
 
-This was tested only on windows and with python 3.11.4
+- Tested on Windows with Python 3.11.4 and python 3.9.13 and Linux with Python 3.9.21. Project should work on other platforms, but geospatial packages may require extra setup.
+- Use absolute paths for `BASE_DATA_DIR`.

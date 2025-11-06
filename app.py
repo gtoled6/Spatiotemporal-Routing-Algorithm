@@ -331,18 +331,18 @@ with ui.layout_sidebar():
             dest_node = ox.distance.nearest_nodes(G, X=dest_lon, Y=dest_lat)
 
             rain_data, lats, lons, rain_ds = data_loader.load_rain_data(
-                rain_data_path= BASE_DATA_DIR + "\RAIN.nc"
+                rain_data_path= BASE_DATA_DIR + "RAIN.nc"
             )
                 
             heat_data, lats, lons, heat_ds = data_loader.load_heat_index_data(
-                heat_index_path= BASE_DATA_DIR + "\T2.nc"
+                heat_index_path= BASE_DATA_DIR + "T2.nc"
             )
             wind_speed_data, wind_dir_data, lats, lons, wind_speed_ds, wind_dir_ds = data_loader.load_wind_data(
-                wind_speed_path= BASE_DATA_DIR + "\WSPD10.nc",
-                wind_direction_path= BASE_DATA_DIR + "\WDIR10.nc"
+                wind_speed_path= BASE_DATA_DIR + "WSPD10.nc",
+                wind_direction_path= BASE_DATA_DIR + "WDIR10.nc"
             )
             humidity_data, lats, lons, humidity_ds = data_loader.load_relative_humidity_data(
-                rh_data_path= BASE_DATA_DIR + "\RH2.nc"
+                rh_data_path= BASE_DATA_DIR + "RH2.nc"
             )
 
             route = nx.shortest_path(G, orig_node, dest_node, weight="travel_time")

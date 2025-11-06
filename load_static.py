@@ -90,7 +90,7 @@ class DataLoader:
 
     def load_wind_data(self, wind_speed_path, wind_direction_path):
         """
-        Implementation of load_rain_data method.
+        
         Loads wind speed and direction data from NetCDF files and masks them to the specified lat/lon bounds for faster calculations.
         
         Parameters:
