@@ -257,32 +257,55 @@ with ui.layout_sidebar():
  
     map_instance = reactive.value(None)
     is_loading = reactive.value(False)
+    map_loaded = reactive.value(False)
     
     @reactive.effect
     @reactive.event(input.generate_plot)
     def create_new_map():
         """Destroy old map and trigger creation of new one"""
-        # Set loading state
+        
         is_loading.set(True)
+        map_loaded.set(False)
         map_instance.set(None)
         map_instance.set("recreate")
 
+
     # @render.ui
+    # @reactive.event(input.generate_plot)
     # def loading_spinner():
-    #     """Display loading spinner while map is being generated"""
-    #     if is_loading():
-    #         return ui.div(
-    #             ui.HTML("""
-    #                 <div style='display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 50px;'>
-    #                     <img src='https://upload.wikimedia.org/wikipedia/commons/b/b1/Loading_icon.gif' 
-    #                          alt='Loading...' 
-    #                          style='width: 64px; height: 64px;'/>
-    #                     <p style='margin-top: 20px; font-size: 16px; color: #666;'>Generating route map...</p>
-    #                 </div>
-    #             """),
-    #             style="text-align: center;"
-    #         )
+        
+    #     """Display loading spinner overlay while map is loading"""
+    #     if not map_loaded():
+    #         if input.generate_plot() == 0:
+    #             return ui.div(
+    #                 ui.HTML("<div style='padding: 20px; text-align: center;'>Click 'Generate Plot' to load map</div>")
+    #             )
+    #         else:
+    #             return ui.div(
+    #                 ui.HTML("""
+    #                     <div style="
+    #                         position: absolute;
+    #                         top: 50%;
+    #                         left: 50%;
+    #                         transform: translate(-50%, -50%);
+    #                         z-index: 9999;
+    #                         background-color: rgba(255, 255, 255, 0.7);
+    #                         border-radius: 12px;
+    #                         padding: 40px;
+    #                         display: flex;
+    #                         flex-direction: column;
+    #                         align-items: center;
+    #                         justify-content: center;">
+    #                         <img src='https://upload.wikimedia.org/wikipedia/commons/b/b1/Loading_icon.gif' 
+    #                             alt='Loading...' 
+    #                             style='width: 64px; height: 64px;'/>
+    #                         <p style='margin-top: 20px; font-size: 16px; color: #555;'>Generating route map...</p>
+    #                     </div>
+    #                 """),
+    #                 style="position: relative; height: 100%; width: 100%;"
+    #             )
     #     return ui.div()
+
 
 
     @render_widget
@@ -290,16 +313,9 @@ with ui.layout_sidebar():
     def map_widget():
         
         _ = map_instance()
-        if input.generate_plot() == 0:
-            from ipywidgets import HTML
-            return HTML("<div style='padding: 20px; text-align: center;'>Click 'Generate Plot' to load map</div>")
-        
-        
-        orig_str = input.origin()
-        dest_str = input.destination()
-        weight_calc_method = input.weight_calculation_method()
+
+
         weight_types = input.weight_type()
-        graph_show_mode = input.graph_show()
 
         rain_w = input.rain_weight() if "rain" in weight_types else None
         heat_w = input.heat_weight() if "heat" in weight_types else None
@@ -434,19 +450,31 @@ with ui.layout_sidebar():
             
             if input.graph_show() == "single":
                 try:
-                    calculate_and_display_route(G, orig_node, dest_node, m, weather_metrics, fastest_metrics, ["total"]) # "_weight" is added in this function, totaling "total_weight"
+                    result = calculate_and_display_route(G, orig_node, dest_node, m, weather_metrics, fastest_metrics, ["total"]) # "_weight" is added in this function, totaling "total_weight"
+                    if result == 1:
+                        map_loaded.set(True)
+                        is_loading.set(False)
+                        
                 except Exception as e:
                     print(f"Route error: {e}")
             elif input.graph_show() == "single_m":
                 try:
-                    calculate_and_display_route(G, orig_node, dest_node, m, weather_metrics, fastest_metrics, list(input.weight_type()))
+                    result = calculate_and_display_route(G, orig_node, dest_node, m, weather_metrics, fastest_metrics, list(input.weight_type()))
+                    if result == 1:
+                        map_loaded.set(True)
+                        is_loading.set(False)
+                        
                 except Exception as e:
                     print(f"Route error: {e}")
                     import traceback
                     traceback.print_exc()
             else: 
                 try:
-                    calculate_and_display_route(G, orig_node, dest_node, m, weather_metrics, fastest_metrics, [input.weight_type()], k_routes=3)
+                    result = calculate_and_display_route(G, orig_node, dest_node, m, weather_metrics, fastest_metrics, [input.weight_type()], k_routes=3)
+                    if result == 1:
+                        map_loaded.set(True)
+                        is_loading.set(False)
+
                 except Exception as e:
                     print(f"Route error: {e}")
                     import traceback

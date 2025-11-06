@@ -6,10 +6,7 @@ from torch_geometric.nn import SAGEConv
 import torch.nn.functional as F
 import os
 import geopandas as gpd
-import xarray as xr
 from shapely.geometry import Point
-from shapely.ops import unary_union
-
 from scipy.spatial import cKDTree
 import numpy as np
 

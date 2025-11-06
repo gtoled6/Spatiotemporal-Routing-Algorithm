@@ -241,6 +241,8 @@ def calculate_and_display_route(G, orig_node, dest_node, m, weather_metrics, fas
                 route_segment.popup = popup
                 m.add_layer(route_segment)
                 
+                return 1
+                
     except Exception as e:
         print(f"Route error: {e}")
         import traceback
