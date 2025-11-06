@@ -450,31 +450,21 @@ with ui.layout_sidebar():
             
             if input.graph_show() == "single":
                 try:
-                    result = calculate_and_display_route(G, orig_node, dest_node, m, weather_metrics, fastest_metrics, ["total"]) # "_weight" is added in this function, totaling "total_weight"
-                    if result == 1:
-                        map_loaded.set(True)
-                        is_loading.set(False)
-                        
+                    calculate_and_display_route(G, orig_node, dest_node, m, weather_metrics, fastest_metrics, ["total"]) # "_weight" is added in this function, totaling "total_weight"    
                 except Exception as e:
                     print(f"Route error: {e}")
             elif input.graph_show() == "single_m":
                 try:
-                    result = calculate_and_display_route(G, orig_node, dest_node, m, weather_metrics, fastest_metrics, list(input.weight_type()))
-                    if result == 1:
-                        map_loaded.set(True)
-                        is_loading.set(False)
-                        
+                    calculate_and_display_route(G, orig_node, dest_node, m, weather_metrics, fastest_metrics, list(input.weight_type()))
+                    
                 except Exception as e:
                     print(f"Route error: {e}")
                     import traceback
                     traceback.print_exc()
             else: 
                 try:
-                    result = calculate_and_display_route(G, orig_node, dest_node, m, weather_metrics, fastest_metrics, [input.weight_type()], k_routes=3)
-                    if result == 1:
-                        map_loaded.set(True)
-                        is_loading.set(False)
-
+                    calculate_and_display_route(G, orig_node, dest_node, m, weather_metrics, fastest_metrics, [input.weight_type()], k_routes=3)
+                    
                 except Exception as e:
                     print(f"Route error: {e}")
                     import traceback
