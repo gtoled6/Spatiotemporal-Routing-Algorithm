@@ -37,9 +37,10 @@ data_loader = DataLoader()
 
 data_loader.load_graph(graph_path=r"chicago.graphml")
 
-
 G = data_loader.G
 rain_data = data_loader.rain_data
+
+
 
 TOTAL_WEIGHTS = 0.0
 # --- UI ---
@@ -49,9 +50,14 @@ ui.page_opts(title="Route viewer", fillable=True)
 with ui.layout_sidebar():
     # Sidebar - Controls
     with ui.sidebar():
+        # Default origin and destination coordinates, starting at the Hilton near O'hare to 
         ui.input_text("origin", "Enter Origin (lat, lon)", "41.9814866, -87.8593659")
         ui.input_text("destination", "Enter Destination (lat, lon)", "41.7905674, -87.5831307")
         
+        
+        
+        
+        # Default options for route visualization
         ui.input_radio_buttons(
             "graph_show",
             "Route Visualization:",
@@ -95,7 +101,7 @@ with ui.layout_sidebar():
         
         
 
-
+        # Default weight sliders
         @render.ui
         def weight_adjustments():
             selected_weights = input.weight_type()
@@ -152,6 +158,8 @@ with ui.layout_sidebar():
             return ui.div() 
         @render.text
         def weight_sum_display():
+            # The sum of the selected weights cannot exceed 1.0, so we calculate the sum and check its validity
+            
             selected_weights = input.weight_type()
             
             if len(selected_weights) < 2:
@@ -180,6 +188,8 @@ with ui.layout_sidebar():
         @reactive.effect
         @reactive.event(input.normalize_weights)
         def _():
+            
+            # This function normalizes the weights so that their sum equals 1.0
             selected_weights = input.weight_type()
             
             if len(selected_weights) < 2:
@@ -219,6 +229,7 @@ with ui.layout_sidebar():
 
         ui.input_action_button("normalize_weights", "Set to a sum of 1", style="margin-top: 10px;")
 
+    # Main panel - Map and route metrics
 
     fastest_metrics = reactive.value({
         'distance': 0, 'duration': 0, 'rain': 0, 
@@ -269,6 +280,9 @@ with ui.layout_sidebar():
         map_instance.set(None)
         map_instance.set("recreate")
 
+
+    # The spinner overlay intented to show in the time between clicking "Generate map" dosent work as intended
+    # currently disabled
 
     # @render.ui
     # @reactive.event(input.generate_plot)
@@ -392,7 +406,8 @@ with ui.layout_sidebar():
             
             m = Map(center=(41.869782371584364, -87.64851844339898), zoom=11)
               
-            # Add rain overlay representing ONLY starting time, NOT the stitched dataset  
+            # Add rain overlay representing ONLY starting time, NOT the stitched dataset 
+            # currently disabled due to possibility of confusing the user
                  
             # if rain_data is not None:
             #     # Create a normalized rain overlay image
@@ -450,6 +465,7 @@ with ui.layout_sidebar():
             
             if input.graph_show() == "single":
                 try:
+                    # Route calculation with Yen's algorithm is handled in this function
                     calculate_and_display_route(G, orig_node, dest_node, m, weather_metrics, fastest_metrics, ["total"]) # "_weight" is added in this function, totaling "total_weight"    
                 except Exception as e:
                     print(f"Route error: {e}")

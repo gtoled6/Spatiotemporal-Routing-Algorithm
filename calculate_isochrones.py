@@ -5,14 +5,21 @@ import networkx as nx
 
 
 def calculate_isochrones(G, orig, route):
+    """
+    This function calculates isochrones for a given graph G and origin node.
+    It assigns a 'zone' attribute to each edge in the graph based on travel time segments
     
+    Later this different zones will be used to stitch different weather datasets times together.
+    
+    
+    """
     for u, v, k, data in G.edges(data=True, keys=True):
         
         # Add a tag for zone
         data['zone'] = 0
         
         
-        # Convert everything to kmh
+        # Some nodes have max speed in MPH, some have in KMH, this converts everything to kmh
         # meters_per_minute = travel_speed * 1000 / 60 #km per hour to m per minute
         if 'maxspeed' in data:
             # Speed is saved as "00 mph", we'll just take the first part and convert to kph

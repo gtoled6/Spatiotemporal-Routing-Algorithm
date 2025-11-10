@@ -6,6 +6,9 @@ import os
 
 
 class DataLoader:
+    """
+    A class to load and manage static data such as graphs and weather data for Chicago area.
+    """
     def __init__(self, time=18):
         self.G = None
         self.rain_data = {}
@@ -16,8 +19,7 @@ class DataLoader:
         self.lat_min, self.lat_max = 41.61, 42.04
         self.lon_min, self.lon_max = -88.03, -87.30
         self.time = time
-        self.graph_path = r"C:\Users\elchi\Desktop\UIC_Chicago\Knowledge_graph\Backend\Backtracking\chicago.graphml"
-        
+
     def load_graph(self, graph_path=None):
         """
         Loads the graph from a GraphML file and adds edge speeds and travel times.
@@ -27,7 +29,7 @@ class DataLoader:
         graph_path (str): Path to the GraphML file.
         """
         if graph_path is not None:
-            self.graph_path = graph_path
+            raise ValueError("Please provide a valid graph_path to load the graph.")
         self.G = ox.load_graphml(self.graph_path)
         self.G = ox.routing.add_edge_speeds(self.G)
         self.G = ox.routing.add_edge_travel_times(self.G)

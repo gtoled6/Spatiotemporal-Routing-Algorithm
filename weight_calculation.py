@@ -16,6 +16,10 @@ from torch_geometric.data import Data
 
 class NodeRegressor(torch.nn.Module):
     
+    """
+    Simple GraphSAGE-based regressor for node-level prediction of weather variables.
+    """
+    
     def __init__(self, in_channels, hidden_channels, out_channels=5):
         super().__init__()
         self.conv1 = SAGEConv(in_channels, hidden_channels)
@@ -38,7 +42,16 @@ def classic_weight_calculations(
     wind_weight=0.09648, humidity_weight=0.01668
 ) -> None:
     """
-    Apply weather-based penalties to edge weights in the graph according to:
+    Apply weather-based penalties to edge weights in the graph according to
+    
+    This method iterates trough each edge and calculates weights based on weather data and zone.
+    
+    Default penalty lambda based calculated previously with entropy weights.
+    rain_weight: 0.85834
+    heat_weight: 0.02850
+    wind_weight: 0.09648
+    rh_weight: 0.01668
+    
     """
     calculated_zones = []
 
@@ -54,7 +67,7 @@ def classic_weight_calculations(
         r_term = w_term = tau_term = h_term = 0
 
 
-       
+        # If rain is selected as a weight, calculate rain penalty
         if (rain_ds is not None) and (rain_weight is not None):
             rain = rain_ds.variables['RAIN'][time + G[u][v][k]["zone"], :, :]
             if G[u][v][k]["zone"] not in calculated_zones:
@@ -64,21 +77,21 @@ def classic_weight_calculations(
             r_term = (rain_weight * rain_mm + t_uv * (1 - rain_weight))
             data['rain_weight'] = r_term
 
-        
+        # If heat index is selected as a weight, calculate heat penalty
         if (heat_ds is not None) and (heat_weight is not None):
             heat_index = heat_ds.variables['T2'][time + data['zone'] - 1, :, :]
             heat_at_point = get_element_at_point(lat, lon, heat_index, lats, lons)
             tau_term = (heat_weight * heat_at_point + t_uv * (1 - heat_weight))
             data['heat_weight'] = tau_term
 
-        
+        # If humidity is selected as a weight, calculate humidity penalty
         if (humidity_ds is not None) and (humidity_weight is not None):
             relative_humidity = humidity_ds.variables['RH2'][time + data['zone'] - 1, :, :]
             rh_at_point = get_element_at_point(lat, lon, relative_humidity, lats, lons)
             h_term = (humidity_weight * rh_at_point + t_uv * (1 - humidity_weight))
             data['humidity_weight'] = h_term
 
-       
+        # If wind is selected as a weight, calculate wind penalty
         if (wind_dir_ds is not None) and (wind_speed_ds is not None) and (wind_weight is not None):
             wind_speed = wind_speed_ds.variables['WSPD10'][time + data['zone'] - 1, :, :]
             wind_direction = wind_dir_ds.variables['WDIR10'][time + data['zone'] - 1, :, :]
@@ -188,6 +201,7 @@ def GNN_weight_calculations(G,
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
     print("Preparing node features and edges")
+    # We build our variables to input to the GNN
     x, edge_index, node_ids = prepare_node_features_and_edges(
         G, rain_stitched, heat_stitched, wind_speed_stitched, wind_dir_stitched, humidity_stitched,
         lats_2d, lons_2d, coords
@@ -206,6 +220,7 @@ def GNN_weight_calculations(G,
         print("Trained new GNN model.")
         model = model.to(device)
 
+    # Model makes predictions
     model.eval()
     with torch.no_grad():
         preds = model(x, edge_index).cpu().numpy()
@@ -238,9 +253,7 @@ def GNN_weight_calculations(G,
         travel_lengths.append(d.get("travel_time", 1.0))
     travel_lengths = np.array(travel_lengths, dtype=np.float32)
 
-    
-    print("Edge weights computed.")
-
+    # Create edge index
     id_to_idx = {nid: i for i, nid in enumerate(node_ids)}
     edges_list = list(G.edges(keys=True))
     u_idx = np.array([id_to_idx[u] for u, _, _ in edges_list])
@@ -248,6 +261,7 @@ def GNN_weight_calculations(G,
 
     travel_lengths = np.array([G[u][v][k].get("travel_time", 1.0) for u, v, k in edges_list], dtype=np.float32)
 
+    # Get predicted weather values at edge target nodes
     rain_pred_at_v = rain_pred_node[v_idx]
     heat_pred_at_v = heat_pred_node[v_idx]
     humidity_pred_at_v = humidity_pred_node[v_idx]
@@ -261,16 +275,13 @@ def GNN_weight_calculations(G,
     wind_w = abs((wind_speed_pred_at_v * wind_weight) + (travel_lengths * (1 - wind_weight)))
     wind_dir_w = (wind_dir_pred_at_v * wind_weight) + (travel_lengths * (1 - wind_weight))
 
-    weather_combination = (
+    total_w = (
         (rain_weight * rain_pred_at_v) +
         (wind_weight * wind_speed_pred_at_v) +
         (heat_weight * heat_pred_at_v) +
         (humidity_weight * humidity_pred_at_v) +
         (travel_lengths * (1 - (rain_weight + wind_weight + heat_weight + humidity_weight)))
     )
-
-
-    total_w = weather_combination
 
     rain_weights_dict = dict(zip(edges_list, rain_w))
     heat_weights_dict = dict(zip(edges_list, heat_w))
@@ -286,16 +297,22 @@ def GNN_weight_calculations(G,
     nx.set_edge_attributes(G, wind_weights_dict, "wind_weight")
     nx.set_edge_attributes(G, wind_dir_weights_dict, "wind_dir_weight")
     nx.set_edge_attributes(G, total_weights_dict, "total_weight")
-  
+    
+    print("Edge weights computed.")
 
 
 def get_element_at_point(lat, lon, rain_grid, lats, lons):
+    """Get the rain value at a specific lat/lon point from the rain grid."""
     i = np.argmin(np.abs(lats[:, 0] - lat))
     j = np.argmin(np.abs(lons[0, :] - lon))
     return rain_grid[i, j]
 
 
 def train_GNN_model(G, rain_grid, heat_grid, wind_speed_grid, wind_dir_grid, humidity_grid, coords, node_ids, lons, lats, hidden_dim=64, lr=1e-3, epochs=300, out_channels=5):
+    """
+    Trains a GNN model to predict weather variables at graph nodes.
+    When trained first time, the training data is the same as the input data.
+    """
     
     
     grid_kdtree = build_grid_kdtree(lats, lons)

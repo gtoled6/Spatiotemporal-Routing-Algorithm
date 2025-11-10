@@ -17,20 +17,20 @@ Create a `.env` file in the project root with the absolute path to the sample da
 
 Windows example:
 ```
-BASE_DATA_DIR=C:\Users\YourUser\Desktop\Spatiotemporal-Routing-Algorithm\20250706\t00z\output
+BASE_DATA_DIR=C:\Users\YourUser\Desktop\Spatiotemporal-Routing-Algorithm\20250706\t00z\outputs\
 ```
 
 Linux example:
 ```
-BASE_DATA_DIR=/home/youruser/Desktop/Spatiotemporal-Routing-Algorithm/20250706/t00z/output
+BASE_DATA_DIR=/home/youruser/Desktop/Spatiotemporal-Routing-Algorithm/20250706/t00z/outputs/
 ```
 
 If the `.env` approach fails, you can hardcode the path in `app.py`:
 ```py
-BASE_DATA_DIR = r"C:\full\path\to\20250706\t00z\output"
+BASE_DATA_DIR = r"C:\full\path\to\20250706\t00z\outputs\"
 ```
 
-Required NetCDF files inside that `output` folder:
+Required NetCDF files inside that `outputs` folder:
 - RAIN.nc
 - T2.nc
 - WSPD10.nc

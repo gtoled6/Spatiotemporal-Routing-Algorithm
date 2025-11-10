@@ -30,7 +30,7 @@ def calculate_and_display_route(G, orig_node, dest_node, m, weather_metrics, fas
             'fastest': mcolors.LinearSegmentedColormap.from_list('fastest', ["#000000", '#000000', '#000000'])  
         }
         
-        if k_routes > 3:
+        if k_routes > 3: # This number is arbitrary, just to avoid cluttering the map
             print("WARNING: k_routes must be at most 3 to show alternatives.")
             k_routes = 3
         
@@ -39,12 +39,13 @@ def calculate_and_display_route(G, orig_node, dest_node, m, weather_metrics, fas
        
         
         for weight in selected_weights:
-            print(selected_weights)
+            # calculate route optimized for every selected weight
             try:
                 print(f"Calculating route optimized for {weight}...")
+                # Use Yen's algorithm for k-shortest paths
                 k_paths = list(ox.routing.k_shortest_paths(G, orig_node, dest_node, k=(k_routes if len(selected_weights) == 1 else 2), weight=f"{weight}_weight"))
                         
-
+                # Add each route to routes_data which will be processed later
                 for i in range(k_routes):
                     route = k_paths[i]
                     routes_data.append({
@@ -66,6 +67,8 @@ def calculate_and_display_route(G, orig_node, dest_node, m, weather_metrics, fas
         if routes_data:
             primary_route = routes_data[0]['route']
             
+            # Obtain overall metrics for the primary route (first in the list)
+            # Path weight is used to calculate the sum of weights along the route, which is later displayed on above the map in the UI
             distance = nx.path_weight(G, primary_route, weight='length') / 1000  # in km
             duration = nx.path_weight(G, primary_route, weight='travel_time') / 60  # in minutes
             rain_exposure = nx.path_weight(G, primary_route, weight='rain_weight') if 'rain' in selected_weights else 0
@@ -82,7 +85,7 @@ def calculate_and_display_route(G, orig_node, dest_node, m, weather_metrics, fas
                 'humidity': humidity_exposure
             })
         
-        
+        # Obtain overall metrics for the fastest route
         fastest_distance = nx.path_weight(G, route_fastest, weight='length') / 1000
         fastest_duration = nx.path_weight(G, route_fastest, weight='travel_time') / 60
         fastest_rain = nx.path_weight(G, route_fastest, weight='rain_weight') if 'rain' in selected_weights else 0
@@ -114,6 +117,7 @@ def calculate_and_display_route(G, orig_node, dest_node, m, weather_metrics, fas
             weight_values = []
             wind_dir_values = []
             
+            # Obtain edge weights for coloring and popup
             for u, v in zip(route[:-1], route[1:]):
                 edge_data = G.get_edge_data(u, v)
                 if isinstance(edge_data, dict):
@@ -141,7 +145,7 @@ def calculate_and_display_route(G, orig_node, dest_node, m, weather_metrics, fas
                     else:
                         weight_values.append(edge_data.get(f'{weight_type}_weight', 0))
             
-            
+            # Normalize weight values for coloring
             if weight_values and max(weight_values) > 0:
                 w_min, w_max = min(weight_values), max(weight_values)
                 w_norm = [(w - w_min) / (w_max - w_min) for w in weight_values]
