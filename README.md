@@ -6,6 +6,29 @@ A web app that computes routes optimized for changing weather conditions (rain, 
 
 ## Quick start
 
+### Create a Virtual environment (Optional)
+
+Creating a virtual environment isolates your project dependencies from your system Python.
+
+**Windows (Command Prompt):**
+```bash
+python -m venv venv
+venv\Scripts\activate
+```
+
+**Windows (PowerShell):**
+```bash
+python -m venv venv
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+.\venv\Scripts\Activate.ps1
+```
+
+**Linux/macOS:**
+```bash
+python3 -m venv venv
+source venv/bin/activate
+```
+
 1. Install dependencies:
 ```bash
 pip install -r requirements.txt
