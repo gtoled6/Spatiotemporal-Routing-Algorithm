@@ -29,7 +29,7 @@ class DataLoader:
         graph_path (str): Path to the GraphML file.
         """
         if graph_path is not None:
-            raise ValueError("Please provide a valid graph_path to load the graph.")
+            self.graph_path = graph_path
         self.G = ox.load_graphml(self.graph_path)
         self.G = ox.routing.add_edge_speeds(self.G)
         self.G = ox.routing.add_edge_travel_times(self.G)

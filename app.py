@@ -26,9 +26,9 @@ load_dotenv()
 
 
 # Base directory from which to load weather data
-BASE_DATA_DIR = os.getenv("BASE_DATA_DIR") # Sample dataset included in repo
+BASE_DATA_DIR = os.getenv("BASE_DATA_DIR")
 if BASE_DATA_DIR is None:
-    BASE_DATA_DIR = r"${YOUR_PATH_TO_THIS_FOLDER_HERE}\20250706\t00z\output"
+    BASE_DATA_DIR = '{PATH\\TO\\YOUR\\DATA}\\try_clean\\good_candidates\\20250706\\t00z\\outputs\\'
 
 # Construct data carrying object
 data_loader = DataLoader()
