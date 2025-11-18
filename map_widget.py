@@ -54,6 +54,8 @@ def calculate_and_display_route(G, orig_node, dest_node, m, weather_metrics, fas
                         'is_fastest': False,
                         'route_index': i
                     })
+                
+                print(f"Finished calculating route optimized for {weight}.")
                     
             except Exception as e:
                 print(f"Could not calculate route for {weight}: {e}")
