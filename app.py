@@ -53,9 +53,9 @@ rain_data = data_loader.rain_data
 
 
 
-TOTAL_WEIGHTS = 0.0
+TOTAL_WEIGHTS = reactive.Value(0.0)
 # --- UI ---
-ui.page_opts(title="Route viewer", fillable=True)
+_ = ui.page_opts(title="Route viewer", fillable=True)
 
 
 with ui.layout_sidebar():
@@ -64,10 +64,7 @@ with ui.layout_sidebar():
         # Default origin and destination coordinates, starting at the Hilton near O'hare to 
         ui.input_text("origin", "Enter Origin (lat, lon)", "41.9814866, -87.8593659")
         ui.input_text("destination", "Enter Destination (lat, lon)", "41.7905674, -87.5831307")
-        
-        
-        
-        
+
         # Default options for route visualization
         ui.input_radio_buttons(
             "graph_show",
@@ -170,7 +167,6 @@ with ui.layout_sidebar():
         @render.text
         def weight_sum_display():
             # The sum of the selected weights cannot exceed 1.0, so we calculate the sum and check its validity
-            
             selected_weights = input.weight_type()
             
             if len(selected_weights) < 2:
@@ -186,7 +182,7 @@ with ui.layout_sidebar():
             if "humidity" in selected_weights:
                 total += input.humidity_weight()
             
-            TOTAL_WEIGHTS = total
+            TOTAL_WEIGHTS.set(total)
 
             if total > 1.0:
                 status = "Sum exceeds 1, please set the sum of weights to 1.0"
@@ -268,10 +264,14 @@ with ui.layout_sidebar():
                    m['distance'], m['duration'], m['rain'], m['heat'], m['wind'], m['humidity']
                )
 
-    if TOTAL_WEIGHTS <= 1.0:
-        ui.input_action_button(id="generate_plot", label="Generate Plot", disabled=False)
-    else:
-        ui.input_action_button(id="generate_plot", label="Generate Plot", disabled=True)
+    # if TOTAL_WEIGHTS <= 1.0:
+    #     ui.input_action_button(id="generate_plot", label="Generate Plot", disabled=False)
+    # else:
+    #     ui.input_action_button(id="generate_plot", label="Generate Plot", disabled=True)
+    @render.ui
+    def generate_plot_button():
+        disabled = TOTAL_WEIGHTS() > 1.0
+        return ui.input_action_button(id="generate_plot", label="Generate Plot", disabled=disabled)
 
  
     # There is a wired bug where the map dosent unload propperly on re-generation
@@ -337,7 +337,7 @@ with ui.layout_sidebar():
     @reactive.event(input.generate_plot)
     def map_widget():
         
-        _ = map_instance()
+        # _ = map_instance()
 
 
         weight_types = input.weight_type()
@@ -497,10 +497,7 @@ with ui.layout_sidebar():
                     import traceback
                     traceback.print_exc()
             is_loading.set(False)
-            m
             return m
-
-            
         except Exception as e:
             is_loading.set(False)
             print(f"Map widget error: {e}")
