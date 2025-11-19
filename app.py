@@ -24,6 +24,17 @@ from map_widget import calculate_and_display_route
 # Global parameters
 load_dotenv()
 
+_data_loader = None
+
+def get_data_loader(time=17):
+    """
+    Get or create the singleton DataLoader instance.
+    """
+    global _data_loader
+    if _data_loader is None:
+        _data_loader = DataLoader(time=time)
+
+    return _data_loader
 
 # Base directory from which to load weather data
 BASE_DATA_DIR = os.getenv("BASE_DATA_DIR")
@@ -31,7 +42,7 @@ if BASE_DATA_DIR is None:
     BASE_DATA_DIR = '{PATH\\TO\\YOUR\\DATA}\\try_clean\\good_candidates\\20250706\\t00z\\outputs\\'
 
 # Construct data carrying object
-data_loader = DataLoader()
+data_loader = get_data_loader(time=17)
 
 # Define paths to weather data files
 
