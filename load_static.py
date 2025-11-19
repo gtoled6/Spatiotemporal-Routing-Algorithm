@@ -28,6 +28,10 @@ class DataLoader:
         Parameters:
         graph_path (str): Path to the GraphML file.
         """
+        
+        if self.G is not None:
+            return
+        
         if graph_path is not None:
             self.graph_path = graph_path
         self.G = ox.load_graphml(self.graph_path)

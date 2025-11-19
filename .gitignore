@@ -50,7 +50,8 @@ out/
 *.mp3
 
 *.env
-
-/__pycache__/
+*.pyc
+__pycache__/
+_pycache_
 /rsconnect-python/
 /venv/
