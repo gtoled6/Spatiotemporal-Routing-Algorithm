@@ -42,7 +42,7 @@ rain_data = data_loader.rain_data
 
 
 
-TOTAL_WEIGHTS = 0.0
+TOTAL_WEIGHTS = reactive.Value(0.0)
 # --- UI ---
 _ = ui.page_opts(title="Route viewer", fillable=True)
 
@@ -156,7 +156,6 @@ with ui.layout_sidebar():
         @render.text
         def weight_sum_display():
             # The sum of the selected weights cannot exceed 1.0, so we calculate the sum and check its validity
-            global TOTAL_WEIGHTS
             selected_weights = input.weight_type()
             
             if len(selected_weights) < 2:
@@ -172,7 +171,7 @@ with ui.layout_sidebar():
             if "humidity" in selected_weights:
                 total += input.humidity_weight()
             
-            TOTAL_WEIGHTS = total
+            TOTAL_WEIGHTS.set(total)
 
             if total > 1.0:
                 status = "Sum exceeds 1, please set the sum of weights to 1.0"
@@ -260,7 +259,7 @@ with ui.layout_sidebar():
     #     ui.input_action_button(id="generate_plot", label="Generate Plot", disabled=True)
     @render.ui
     def generate_plot_button():
-        disabled = TOTAL_WEIGHTS > 1.0
+        disabled = TOTAL_WEIGHTS() > 1.0
         return ui.input_action_button(id="generate_plot", label="Generate Plot", disabled=disabled)
 
  
@@ -341,7 +340,7 @@ with ui.layout_sidebar():
         try:
             orig_lat, orig_lon = map(float, input.origin().split(","))
             dest_lat, dest_lon = map(float, input.destination().split(","))
-            
+
             orig_node = ox.distance.nearest_nodes(G, X=orig_lon, Y=orig_lat)
             dest_node = ox.distance.nearest_nodes(G, X=dest_lon, Y=dest_lat)
 
