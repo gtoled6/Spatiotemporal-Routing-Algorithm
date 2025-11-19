@@ -10,8 +10,6 @@ def calculate_isochrones(G, orig, route):
     It assigns a 'zone' attribute to each edge in the graph based on travel time segments
     
     Later this different zones will be used to stitch different weather datasets times together.
-    
-    
     """
     for u, v, k, data in G.edges(data=True, keys=True):
         
