@@ -24,7 +24,7 @@ from map_widget import calculate_and_display_route
 # Global parameters
 load_dotenv()
 
-
+MAPBOX_TOKEN = os.getenv("MAPBOX_TOKEN")
 # Base directory from which to load weather data
 BASE_DATA_DIR = os.getenv("BASE_DATA_DIR")
 if BASE_DATA_DIR is None:
@@ -44,7 +44,7 @@ rain_data = data_loader.rain_data
 
 TOTAL_WEIGHTS = 0.0
 # --- UI ---
-ui.page_opts(title="Route viewer", fillable=True)
+_ = ui.page_opts(title="Route viewer", fillable=True)
 
 
 with ui.layout_sidebar():
@@ -53,7 +53,7 @@ with ui.layout_sidebar():
         # Default origin and destination coordinates, starting at the Hilton near O'hare to 
         ui.input_text("origin", "Enter Origin (lat, lon)", "41.9814866, -87.8593659")
         ui.input_text("destination", "Enter Destination (lat, lon)", "41.7905674, -87.5831307")
-        
+
         # Default options for route visualization
         ui.input_radio_buttons(
             "graph_show",
@@ -341,7 +341,7 @@ with ui.layout_sidebar():
         try:
             orig_lat, orig_lon = map(float, input.origin().split(","))
             dest_lat, dest_lon = map(float, input.destination().split(","))
-
+            
             orig_node = ox.distance.nearest_nodes(G, X=orig_lon, Y=orig_lat)
             dest_node = ox.distance.nearest_nodes(G, X=dest_lon, Y=dest_lat)
 
@@ -488,8 +488,6 @@ with ui.layout_sidebar():
                     traceback.print_exc()
             is_loading.set(False)
             return m
-
-            
         except Exception as e:
             is_loading.set(False)
             print(f"Map widget error: {e}")
